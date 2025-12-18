@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <thread>
+#include <stdlib.h>
 
 #include "CycleTimer.h"
 
@@ -9,6 +10,8 @@ typedef struct {
     unsigned int width;
     unsigned int height;
     int maxIterations;
+    int startRow;
+    int totalRows;
     int* output;
     int threadId;
     int numThreads;
@@ -35,7 +38,7 @@ void workerThreadStart(WorkerArgs * const args) {
     // program that uses two threads, thread 0 could compute the top
     // half of the image and thread 1 could compute the bottom half.
 
-    printf("Hello world from thread %d\n", args->threadId);
+    mandelbrotSerial(args->x0, args->y0, args->x1, args->y1, args->width, args->height, args->startRow, args->totalRows, args->maxIterations, args->output);
 }
 
 //
@@ -61,6 +64,10 @@ void mandelbrotThread(
     std::thread workers[MAX_THREADS];
     WorkerArgs args[MAX_THREADS];
 
+    // edge condition
+    int normal_total_rows = (height + numThreads - 1) / numThreads;
+    int edge_total_rows = normal_total_rows - (numThreads*normal_total_rows - height);
+
     for (int i=0; i<numThreads; i++) {
       
         // TODO FOR CS149 STUDENTS: You may or may not wish to modify
@@ -72,6 +79,8 @@ void mandelbrotThread(
         args[i].y1 = y1;
         args[i].width = width;
         args[i].height = height;
+        args[i].startRow = i * normal_total_rows;
+        args[i].totalRows = (i==numThreads-1)?edge_total_rows:normal_total_rows;
         args[i].maxIterations = maxIterations;
         args[i].numThreads = numThreads;
         args[i].output = output;
