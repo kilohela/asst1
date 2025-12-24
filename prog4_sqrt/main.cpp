@@ -10,6 +10,8 @@ using namespace ispc;
 
 extern void sqrtSerial(int N, float startGuess, float* values, float* output);
 
+extern void my_sqrt(int N, float startGuess, float* values, float* output);
+
 static void verifyResult(int N, float* result, float* gold) {
     for (int i=0; i<N; i++) {
         if (fabs(result[i] - gold[i]) > 1e-4) {
@@ -92,8 +94,28 @@ int main() {
 
     verifyResult(N, output, gold);
 
+    // Clear out the buffer
+    for (unsigned int i = 0; i < N; ++i)
+        output[i] = 0;
+
+    //
+    // AVX2 intrinsics version
+    //
+    double minIntrinsics = 1e30;
+    for (int i = 0; i < 3; ++i) {
+        double startTime = CycleTimer::currentSeconds();
+        my_sqrt(N, initialGuess, values, output);
+        double endTime = CycleTimer::currentSeconds();
+        minIntrinsics = std::min(minIntrinsics, endTime - startTime);
+    }
+
+    printf("[sqrt intrinsic]:\t[%.3f] ms\n", minIntrinsics * 1000);
+
+    verifyResult(N, output, gold);
+
     printf("\t\t\t\t(%.2fx speedup from ISPC)\n", minSerial/minISPC);
     printf("\t\t\t\t(%.2fx speedup from task ISPC)\n", minSerial/minTaskISPC);
+    printf("\t\t\t\t(%.2fx speedup from avx2 intrinsic)\n", minSerial/minIntrinsics);
 
     delete [] values;
     delete [] output;
