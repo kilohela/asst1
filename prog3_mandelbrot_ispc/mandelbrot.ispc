@@ -68,7 +68,7 @@ export void mandelbrot_ispc_withtasks(uniform float x0, uniform float y0,
                                       uniform int output[])
 {
 
-    uniform int task_num = 8;
+    uniform int task_num = 8*25;
     uniform int rowsPerTask = height / task_num;
 
     // create task_num tasks
