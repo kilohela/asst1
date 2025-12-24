@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <algorithm>
+#include <cstddef>
 
 #include "CycleTimer.h"
 #include "saxpy_ispc.h"
@@ -37,11 +38,11 @@ int main() {
 
     float scale = 2.f;
 
-    float* arrayX = new float[N];
-    float* arrayY = new float[N];
-    float* resultSerial = new float[N];
-    float* resultISPC = new float[N];
-    float* resultTasks = new float[N];
+    float* arrayX = new (std::align_val_t(64)) float[N];
+    float* arrayY = new (std::align_val_t(64)) float[N];
+    float* resultSerial = new (std::align_val_t(64)) float[N];
+    float* resultISPC = new (std::align_val_t(64)) float[N];
+    float* resultTasks = new (std::align_val_t(64)) float[N];
 
     // initialize array values
     for (unsigned int i=0; i<N; i++)
@@ -110,11 +111,11 @@ int main() {
     //printf("\t\t\t\t(%.2fx speedup from ISPC)\n", minSerial/minISPC);
     //printf("\t\t\t\t(%.2fx speedup from task ISPC)\n", minSerial/minTaskISPC);
 
-    delete[] arrayX;
-    delete[] arrayY;
-    delete[] resultSerial;
-    delete[] resultISPC;
-    delete[] resultTasks;
+    operator delete[](arrayX, std::align_val_t(64));
+    operator delete[](arrayY, std::align_val_t(64));
+    operator delete[](resultSerial, std::align_val_t(64));
+    operator delete[](resultISPC, std::align_val_t(64));
+    operator delete[](resultTasks, std::align_val_t(64));
 
     return 0;
 }
